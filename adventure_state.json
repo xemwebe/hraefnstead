@@ -1,0 +1,31 @@
+{
+  "loc": 0,
+  "rooms": [
+    {
+      "name": "Forest",
+      "description": "You are standing in a deep forest.\nIn front of you is the entrance of a dungeon.",
+      "entities": {},
+      "exits": { "North": 1 }
+    },
+    {
+      "name": "Hallway",
+      "description": "You are in a dark hallway.",
+      "entities": {},
+      "exits": { "East": 2, "South": 0 }
+    },
+    {
+      "name": "Treasure Room",
+      "description": "You found the treasure room!",
+      "entities": {
+        "1": {
+          "id": "1",
+          "name": "gold coin",
+          "description": "A shiny gold coin.",
+          "aliases": ["gold", "coin"]
+        }
+      },
+      "exits": { "West": 1 }
+    }
+  ],
+  "inventory": {}
+}
