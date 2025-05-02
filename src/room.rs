@@ -1,13 +1,13 @@
 use crate::direction::Direction;
-use crate::entity::Entity;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Room {
     pub name: String,
     pub description: String,
-    pub entities: HashMap<String, Entity>,
+    pub entities: HashSet<usize>,
+    pub actors: HashSet<usize>,
     pub exits: HashMap<Direction, usize>,
 }
 
@@ -15,13 +15,15 @@ impl Room {
     pub fn new(
         name: &str,
         description: &str,
-        entities: HashMap<String, Entity>,
+        entities: HashSet<usize>,
+        actors: HashSet<usize>,
         exits: HashMap<Direction, usize>,
     ) -> Self {
         Self {
             name: name.to_string(),
             description: description.to_string(),
             entities,
+            actors,
             exits,
         }
     }
@@ -30,34 +32,27 @@ impl Room {
         &self.description
     }
 
-    pub fn get_entities(&self) -> &HashMap<String, Entity> {
-        &self.entities
+    pub fn get_exits(&self) -> &HashMap<Direction, usize> {
+        &self.exits
     }
 
     pub fn get_exit(&self, dir: Direction) -> Option<usize> {
         self.exits.get(&dir).map(|&x| x)
     }
 
-    pub fn get_exits(&self) -> &HashMap<Direction, usize> {
-        &self.exits
+    pub fn get_entities(&self) -> &HashSet<usize> {
+        &self.entities
     }
 
-    pub fn get_entity(&mut self, thing: &String) -> Option<Entity> {
-        let mut found_entry = None;
-        for entry in self.entities.iter() {
-            if entry.1.aliases.contains(thing) {
-                found_entry = Some(entry.0.clone());
-                break;
-            }
-        }
-        if let Some(entry) = found_entry {
-            self.entities.remove(&entry)
-        } else {
-            None
-        }
+    pub fn get_entity(&mut self, entity_id: usize) -> bool {
+        self.entities.remove(&entity_id)
     }
 
-    pub fn add_entity(&mut self, entity: Entity) {
-        self.entities.insert(entity.id.clone(), entity);
+    pub fn add_entity(&mut self, entity_id: usize) {
+        self.entities.insert(entity_id);
+    }
+
+    pub fn get_actors(&self) -> &HashSet<usize> {
+        &self.actors
     }
 }

@@ -1,60 +1,78 @@
-use crate::action::Action;
+use crate::command::Command;
 use crate::direction::Direction;
 
-pub fn parse(input: &str) -> Action {
+pub fn parse(input: &str) -> Command {
     let mut tokens = input.split_whitespace();
     let command = tokens.next().unwrap();
     match command {
-        "look" => Action::Look,
+        "look" => Command::Look,
         "quit" => {
             println!("Goodbye!");
-            Action::Quit
+            Command::Quit
         }
         "save" => {
             println!("Saving game...");
-            Action::Save
+            let file_name = if let Some(file_name) = tokens.next() {
+                file_name.to_string()
+            } else {
+                String::new()
+            };
+            Command::Save(file_name)
         }
         "load" => {
             println!("Loading game...");
-            Action::Load
+            let file_name = if let Some(file_name) = tokens.next() {
+                file_name.to_string()
+            } else {
+                String::new()
+            };
+            Command::Load(file_name)
         }
         "go" => {
             if let Some(dir) = tokens.next() {
                 if let Some(direction) = Direction::from_str(dir) {
-                    Action::Move(direction)
+                    Command::Move(direction)
                 } else {
                     println!("I don't know that direction.");
-                    Action::None
+                    Command::None
                 }
             } else {
                 println!("You need to specify a direction to go to.");
-                Action::None
+                Command::None
             }
         }
-        "north" | "n" => Action::Move(Direction::North),
-        "south" | "s" => Action::Move(Direction::South),
-        "east" | "e" => Action::Move(Direction::East),
-        "west" | "w" => Action::Move(Direction::West),
+        "north" | "n" => Command::Move(Direction::North),
+        "south" | "s" => Command::Move(Direction::South),
+        "east" | "e" => Command::Move(Direction::East),
+        "west" | "w" => Command::Move(Direction::West),
         "take" | "t" => {
             if let Some(thing) = tokens.next() {
-                Action::Take(thing.to_string())
+                Command::Take(thing.to_string())
             } else {
                 println!("You need to specify an item to take.");
-                Action::None
+                Command::None
             }
         }
         "drop" => {
             if let Some(thing) = tokens.next() {
-                Action::Drop(thing.to_string())
+                Command::Drop(thing.to_string())
             } else {
                 println!("You need to specify an item to drop.");
-                Action::None
+                Command::None
             }
         }
-        "inventory" | "inv" | "i" => Action::Inventory,
+        "inventory" | "inv" | "i" => Command::Inventory,
+        "examine" => {
+            if let Some(thing) = tokens.next() {
+                Command::Examine(thing.to_string())
+            } else {
+                println!("You need to specify an item to examine.");
+                Command::None
+            }
+        }
         _ => {
             println!("I don't understand that command.");
-            Action::None
+            Command::None
         }
     }
 }
