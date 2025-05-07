@@ -95,11 +95,16 @@ impl State {
         let events = vec![
             Event::new(2,
                 "The bed is made of soft wood and has a comfortable mattress. Below the pillow you find a copper coin".to_string(),
-                vec![Command::AddItemToRoom(2)]),
+                vec![Command::AddItemToRoom(2), Command::DeActivateEvent(0), Command::ActivateEvent(1)]),
+            Event::new(2,
+                "Now that you have taken the coin, you glance down at an empty bed".to_string(),
+                vec![]
+            )
         ];
 
         let mut active_events = HashSet::new();
         active_events.insert(0);
+        
 
         Self {
             loc: 0,
@@ -239,5 +244,13 @@ impl State {
 
     pub fn get_file_name(&self) -> &str {
         &self.file_name
+    }
+    pub fn de_activate_event(&mut self, event_id: &usize) {
+        
+        self.active_events.remove(event_id);
+    }
+    pub fn activate_event(&mut self, event_id: &usize) {
+        
+        self.active_events.insert(*event_id);
     }
 }
