@@ -83,7 +83,7 @@ impl State {
             1,
             Actor::new(
                 "Goblin",
-                "A small green goblin leans against a door to the north.",
+                "A small red goblin leans against a door to the north.",
                 goblin_aliases,
             ),
         );
