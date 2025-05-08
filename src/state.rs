@@ -3,8 +3,8 @@ use crate::command::Command;
 use crate::condition::Condition;
 use crate::direction::Direction;
 use crate::entity::Entity;
-use crate::event::Event;
 use crate::event::Dialog;
+use crate::event::Event;
 use crate::room::Room;
 
 use std::collections::{HashMap, HashSet};
@@ -20,7 +20,7 @@ pub struct State {
     actors: HashMap<usize, Actor>,
     active_events: HashSet<usize>,
     events: Vec<Event>,
-    dialogs:Vec<Dialog>,
+    dialogs: Vec<Dialog>,
     conditions: Vec<Condition>,
     file_name: String,
 }
@@ -70,11 +70,21 @@ impl State {
             bag_of_chips_aliases,
         );
 
+        let mut dead_goblin_aliases = HashSet::new();
+        dead_goblin_aliases.insert("goblin".to_string());
+        dead_goblin_aliases.insert("corpse".to_string());
+        let dead_goblin = Entity::new(
+            "Goblin corpse",
+            "The corpse smells badly and is rotting slowly.",
+            dead_goblin_aliases,
+        );
+
         let mut entity_map = HashMap::new();
         entity_map.insert(1, treasure);
         entity_map.insert(2, coin);
         entity_map.insert(3, vending_machine);
         entity_map.insert(4, bag_of_chips);
+        entity_map.insert(5, dead_goblin);
 
         let mut actors_map = HashMap::new();
         let mut goblin_aliases = HashSet::new();
@@ -108,9 +118,8 @@ impl State {
             Condition::And(5, 6),
             Condition::ObjectInInventory(4),
             Condition::CommandIs(Command::Use("goblin".to_string())),
-            Condition::And(9,8),
-            Condition::And(10,0),
-            
+            Condition::And(9, 8),
+            Condition::And(10, 0),
         ];
 
         let events = vec![
@@ -122,18 +131,16 @@ impl State {
                 vec![]),
             Event::new(7,
             "The vending machine makes some concerning noice... but it works!".to_string(),
-            vec![Command::DeActivateEvent(2), Command::ActivateEvent(3), Command::AddItemToRoom(4), Command::Consume(2), Command::ActivateEvent((4))]),
+            vec![Command::DeActivateEvent(2), Command::ActivateEvent(3), Command::AddItemToRoom(4), Command::Consume(2), Command::ActivateEvent(4)]),
             Event::new(7,
                 "You would sure like to get more loot, however your only coin is now gone".to_string(),
-                vec![]), 
+                vec![]),
             Event::new(11,
-                "The goblin doesn't seem to take much interest in you, but he sure does want those chips".to_string(),
-                vec![Command::KillGoblin(Direction::North, 3)]),
+                "The goblin doesn't seem to take much interest in you, but he hungrily takes the chips.\nThe goblins face turns green, than grey.\nHe falls to the floow and doesn't move anymore.".to_string(),
+                vec![Command::AddExit(Direction::North, 3), Command::RemoveActor(1), Command::AddItemToRoom(5)]),
         ];
 
-        let dialogs =vec![];
-
-       
+        let dialogs = vec![];
 
         let mut active_events = HashSet::new();
         active_events.insert(0);
@@ -237,7 +244,7 @@ impl State {
             }
         }
         if let Some(id) = found_id {
-            if self.rooms[self.loc].get_entity(id) {
+            if self.rooms[self.loc].remove_entity(id) {
                 self.inventory.insert(id);
                 return true;
             }
@@ -270,7 +277,7 @@ impl State {
             }
             Condition::CommandIs(command_condition) => command_condition == command,
             Condition::ObjectInInventory(entity_id) => self.inventory.contains(entity_id),
-            Condition::Or (c1, c2) => {
+            Condition::Or(c1, c2) => {
                 self.check_condition(&self.conditions[*c1], command)
                     || self.check_condition(&self.conditions[*c2], command)
             }
@@ -281,7 +288,7 @@ impl State {
             }
             Condition::NotCommandIs(command_condition) => command_condition != command,
             Condition::NotObjectInInventory(entity_id) => !self.inventory.contains(entity_id),
-            Condition::NotAnd (c1, c2) => {
+            Condition::NotAnd(c1, c2) => {
                 !self.check_condition(&self.conditions[*c1], command)
                     || !self.check_condition(&self.conditions[*c2], command)
             }
@@ -315,10 +322,7 @@ impl State {
         self.inventory.remove(id);
         let removed = self.entities.get(&id);
         if let Some(removed) = removed {
-            println!("Consumed {}", removed.get_name());            
+            println!("Consumed {}", removed.get_name());
         }
-        
     }
-    
-   
 }

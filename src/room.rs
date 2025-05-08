@@ -1,7 +1,6 @@
 use crate::direction::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use crate::command::Command;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Room {
@@ -45,7 +44,7 @@ impl Room {
         &self.entities
     }
 
-    pub fn get_entity(&mut self, entity_id: usize) -> bool {
+    pub fn remove_entity(&mut self, entity_id: usize) -> bool {
         self.entities.remove(&entity_id)
     }
 
@@ -56,7 +55,10 @@ impl Room {
     pub fn get_actors(&self) -> &HashSet<usize> {
         &self.actors
     }
-    pub fn kill_goblin(&mut self, direction: Direction, room_number: usize) {
+    pub fn remove_actor(&mut self, actor_id: usize) -> bool {
+        self.actors.remove(&actor_id)
+    }
+    pub fn add_exit(&mut self, direction: Direction, room_number: usize) {
         self.exits.insert(direction, room_number);
     }
 }

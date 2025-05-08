@@ -2,7 +2,6 @@ use crate::direction::Direction;
 
 use crate::state::State;
 
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
@@ -21,13 +20,13 @@ pub enum Command {
     DeActivateEvent(usize),
     ActivateEvent(usize),
     Use(String),
+    RemoveActor(usize),
     //Empty,
     Eat(String),
     Consume(usize),
-    KillGoblin(Direction, usize)
-   // Denial,
-    //TriggerDialog,
-   // StateOfDialog(usize),
+    AddExit(Direction, usize), // Denial,
+                               //TriggerDialog,
+                               // StateOfDialog(usize),
 }
 
 impl Command {
@@ -108,7 +107,6 @@ impl Command {
                     println!("You drop the {}", entity.get_name());
                     let room = state.get_room_mut();
                     room.add_entity(entity_id);
-                    
                 } else {
                     println!("You don't have a {} to drop.", thing);
                 }
@@ -132,25 +130,30 @@ impl Command {
             Command::DeActivateEvent(event_id) => state.de_activate_event(event_id),
             Command::ActivateEvent(event_id) => state.activate_event(event_id),
             Command::Examine(thing) => {
-            if let Some (id) = state.find_inventory(thing) {
-                if let Some(entity) = state.get_entity(id) {
-                    println!("{}", entity.description);
+                if let Some(id) = state.find_inventory(thing) {
+                    if let Some(entity) = state.get_entity(id) {
+                        println!("{}", entity.description);
+                    }
+                } else {
+                    println!("You need to have item in inventory!")
                 }
-            }
-            else{println!("You need to have item in inventory!")}
             }
             Command::Eat(thing) => {
-                if let Some (id) = state.find_inventory(thing) {
-                        state.consume_from_inventory(&id);
+                if let Some(id) = state.find_inventory(thing) {
+                    state.consume_from_inventory(&id);
+                } else {
+                    println!("You need to have item in inventory!")
                 }
-                else{println!("You need to have item in inventory!")}
             }
-            Command::Consume(id) => {state.consume_from_inventory(&id);
-
+            Command::Consume(id) => {
+                state.consume_from_inventory(&id);
             }
-            Command::KillGoblin(direction, room_number)=> {
-                state.get_room_mut().kill_goblin(direction.clone(), *room_number)},
-            
+            Command::AddExit(direction, room_number) => state
+                .get_room_mut()
+                .add_exit(direction.clone(), *room_number),
+            Command::RemoveActor(actor_id) => {
+                state.get_room_mut().remove_actor(*actor_id);
+            }
             _ => {}
         }
         true
