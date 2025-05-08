@@ -22,6 +22,7 @@ pub struct Dialog {
     pub condition_id: usize,
     pub message: String,
     pub command_stack: Vec<Command>,
+    
     }
 impl Dialog {
         pub fn new(condition_id: usize, message: String, command_stack: Vec<Command>) -> Self {
@@ -29,6 +30,7 @@ impl Dialog {
                 condition_id,
                 message,
                 command_stack,
+                
             }
         }
     }

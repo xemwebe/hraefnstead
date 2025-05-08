@@ -1,6 +1,7 @@
 use crate::direction::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use crate::command::Command;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Room {
@@ -54,5 +55,8 @@ impl Room {
 
     pub fn get_actors(&self) -> &HashSet<usize> {
         &self.actors
+    }
+    pub fn kill_goblin(&mut self, direction: Direction, room_number: usize) {
+        self.exits.insert(direction, room_number);
     }
 }

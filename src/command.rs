@@ -2,7 +2,7 @@ use crate::direction::Direction;
 
 use crate::state::State;
 
-use clap::Id;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
@@ -108,6 +108,7 @@ impl Command {
                     println!("You drop the {}", entity.get_name());
                     let room = state.get_room_mut();
                     room.add_entity(entity_id);
+                    
                 } else {
                     println!("You don't have a {} to drop.", thing);
                 }
@@ -147,7 +148,8 @@ impl Command {
             Command::Consume(id) => {state.consume_from_inventory(&id);
 
             }
-            Command::KillGoblin(direction, room_number)=> state.kill_goblin(direction, room_number, &mut state),
+            Command::KillGoblin(direction, room_number)=> {
+                state.get_room_mut().kill_goblin(direction.clone(), *room_number)},
             
             _ => {}
         }

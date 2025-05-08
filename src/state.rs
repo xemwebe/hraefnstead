@@ -106,8 +106,8 @@ impl State {
             Condition::CommandIs(Command::Use("coin".to_string())),
             Condition::And(3, 4),
             Condition::And(5, 6),
-            Condition::ObjectInInventory(5),
-            Condition::CommandIs(Command::Use("talk to goblin".to_string())),
+            Condition::ObjectInInventory(4),
+            Condition::CommandIs(Command::Use("goblin".to_string())),
             Condition::And(9,8),
             Condition::And(10,0),
             
@@ -122,13 +122,13 @@ impl State {
                 vec![]),
             Event::new(7,
             "The vending machine makes some concerning noice... but it works!".to_string(),
-            vec![Command::DeActivateEvent(2), Command::ActivateEvent(3), Command::AddItemToRoom(4), Command::Consume(2)]),
+            vec![Command::DeActivateEvent(2), Command::ActivateEvent(3), Command::AddItemToRoom(4), Command::Consume(2), Command::ActivateEvent((4))]),
             Event::new(7,
                 "You would sure like to get more loot, however your only coin is now gone".to_string(),
                 vec![]), 
             Event::new(11,
                 "The goblin doesn't seem to take much interest in you, but he sure does want those chips".to_string(),
-                vec![]),
+                vec![Command::KillGoblin(Direction::North, 3)]),
         ];
 
         let dialogs =vec![];
@@ -317,9 +317,8 @@ impl State {
         if let Some(removed) = removed {
             println!("Consumed {}", removed.get_name());            
         }
-    pub fn kill_goblin(direction: Direction, room_number: usize, &mut state) {
-        self.exits.insert(Direction::North, 1);
         
     }
-    }
+    
+   
 }

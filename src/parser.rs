@@ -75,9 +75,9 @@ pub fn parse(input: &str) -> Command {
                 Command::None
             }
         }
-        "use" | "talk to" => {
+        "use" | "talk" => {
             if let Some(thing) = tokens.next() {
-                Command::Eat(thing.to_string())
+                Command::Use(thing.to_string())
             } else {
                 println!("You need to specify an item to use.");
                 Command::None
