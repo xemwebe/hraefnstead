@@ -79,6 +79,14 @@ impl State {
             golden_armor_aliases,
         );
         // golden_armor_aliases.insert("golden armor".to_string());
+        let mut dead_goblin_aliases = HashSet::new();
+        dead_goblin_aliases.insert("goblin".to_string());
+        dead_goblin_aliases.insert("corpse".to_string());
+        let dead_goblin = Entity::new(
+            "Goblin corpse",
+            "The corpse smells badly and is rotting slowly.",
+            dead_goblin_aliases,
+        );
 
         let mut entity_map = HashMap::new();
         entity_map.insert(1, treasure);
@@ -86,6 +94,7 @@ impl State {
         entity_map.insert(3, vending_machine);
         entity_map.insert(4, bag_of_chips);
         entity_map.insert(5, golden_armor);
+        entity_map.insert(6, dead_goblin);
 
         let mut actors_map = HashMap::new();
         let mut goblin_aliases = HashSet::new();
@@ -94,7 +103,7 @@ impl State {
             1,
             Actor::new(
                 "Goblin",
-                "A small green goblin leans against a door to the north.",
+                "A small red goblin leans against a door to the north.",
                 goblin_aliases,
             ),
         );
@@ -135,13 +144,13 @@ impl State {
                 vec![]),
             Event::new(7,
             "The vending machine makes some concerning noice... but it works!".to_string(),
-            vec![Command::DeActivateEvent(2), Command::ActivateEvent(3), Command::AddItemToRoom(4), Command::Consume(2), Command::ActivateEvent((4))]),
+            vec![Command::DeActivateEvent(2), Command::ActivateEvent(3), Command::AddItemToRoom(4), Command::Consume(2), Command::ActivateEvent(4)]),
             Event::new(7,
                 "You would sure like to get more loot, however your only coin is now gone".to_string(),
-                vec![]), 
+                vec![]),
             Event::new(11,
-                "The goblin doesn't seem to take much interest in you, but he sure does want those chips".to_string(),
-                vec![Command::KillGoblin(Direction::North, 3)]),
+                "The goblin doesn't seem to take much interest in you, but he hungrily takes the chips.\nThe goblins face turns green, than grey.\nHe falls to the floow and doesn't move anymore.".to_string(),
+                vec![Command::AddExit(Direction::North, 3), Command::RemoveActor(1), Command::AddItemToRoom(6)]),
         ];
 
         let dialogs = vec![];
@@ -270,7 +279,7 @@ impl State {
             }
         }
         if let Some(id) = found_id {
-            if self.rooms[self.loc].get_entity(id) {
+            if self.rooms[self.loc].remove_entity(id) {
                 self.inventory.insert(id);
                 return true;
             }

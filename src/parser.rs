@@ -71,7 +71,7 @@ pub fn parse(input: &str) -> Command {
                 Command::None
             }
         }
-        "use" | "talk" => {
+        "use" => {
             if let Some(thing) = tokens.next() {
                 Command::Use(thing.to_string())
             } else {

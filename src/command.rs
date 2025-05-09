@@ -22,10 +22,11 @@ pub enum Command {
     DeActivateEvent(usize),
     ActivateEvent(usize),
     Use(String),
+    RemoveActor(usize),
     //Empty,
     Eat(String),
     Consume(usize),
-    KillGoblin(Direction, usize),
+    AddExit(Direction, usize), // Denial,
     Craft(String),
     CraftHelp,
     // Denial,
@@ -152,9 +153,6 @@ impl Command {
             Command::Consume(id) => {
                 state.consume_from_inventory(&id);
             }
-            Command::KillGoblin(direction, room_number) => state
-                .get_room_mut()
-                .kill_goblin(direction.clone(), *room_number),
             Command::Craft(thing) => {
                 if let Some(id) = state.find_inventory(thing) {
                     
@@ -168,7 +166,12 @@ impl Command {
             Command::CraftHelp => {
                 state.craft_help()
             }
-
+            Command::AddExit(direction, room_number) => state
+                .get_room_mut()
+                .add_exit(direction.clone(), *room_number),
+            Command::RemoveActor(actor_id) => {
+                state.get_room_mut().remove_actor(*actor_id);
+            }
             _ => {}
         }
 
