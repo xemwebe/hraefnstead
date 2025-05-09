@@ -1,7 +1,7 @@
+use crate::command::Command;
 use crate::direction::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use crate::command::Command;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Room {

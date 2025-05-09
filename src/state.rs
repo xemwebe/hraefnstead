@@ -3,8 +3,8 @@ use crate::command::Command;
 use crate::condition::Condition;
 use crate::direction::Direction;
 use crate::entity::Entity;
-use crate::event::Event;
 use crate::event::Dialog;
+use crate::event::Event;
 use crate::room::Room;
 
 use std::collections::{HashMap, HashSet};
@@ -15,12 +15,13 @@ use serde::{Deserialize, Serialize};
 pub struct State {
     loc: usize,
     inventory: HashSet<usize>,
+    craft_inventory: HashMap<usize, usize>,
     rooms: Vec<Room>,
     entities: HashMap<usize, Entity>,
     actors: HashMap<usize, Actor>,
     active_events: HashSet<usize>,
     events: Vec<Event>,
-    dialogs:Vec<Dialog>,
+    dialogs: Vec<Dialog>,
     conditions: Vec<Condition>,
     file_name: String,
 }
@@ -70,11 +71,21 @@ impl State {
             bag_of_chips_aliases,
         );
 
+        let mut golden_armor_aliases = HashSet::new();
+        golden_armor_aliases.insert("armor".to_string());
+        let golden_armor = Entity::new(
+            "armor",
+            "A really shiny, yet very powerful piece of armor",
+            golden_armor_aliases,
+        );
+        // golden_armor_aliases.insert("golden armor".to_string());
+
         let mut entity_map = HashMap::new();
         entity_map.insert(1, treasure);
         entity_map.insert(2, coin);
         entity_map.insert(3, vending_machine);
         entity_map.insert(4, bag_of_chips);
+        entity_map.insert(5, golden_armor);
 
         let mut actors_map = HashMap::new();
         let mut goblin_aliases = HashSet::new();
@@ -97,6 +108,9 @@ impl State {
         let mut entrance_entities = HashSet::new();
         entrance_entities.insert(3);
 
+        let mut craft_inventory: HashMap<usize, usize> = HashMap::new();
+        craft_inventory.insert(1, 5);
+
         let conditions = vec![
             Condition::Location(2),
             Condition::CommandIs(Command::Examine("bed".to_string())),
@@ -108,9 +122,8 @@ impl State {
             Condition::And(5, 6),
             Condition::ObjectInInventory(4),
             Condition::CommandIs(Command::Use("goblin".to_string())),
-            Condition::And(9,8),
-            Condition::And(10,0),
-            
+            Condition::And(9, 8),
+            Condition::And(10, 0),
         ];
 
         let events = vec![
@@ -131,9 +144,7 @@ impl State {
                 vec![Command::KillGoblin(Direction::North, 3)]),
         ];
 
-        let dialogs =vec![];
-
-       
+        let dialogs = vec![];
 
         let mut active_events = HashSet::new();
         active_events.insert(0);
@@ -172,6 +183,7 @@ impl State {
                 ),
             ],
             inventory: HashSet::new(),
+            craft_inventory,
             entities: entity_map,
             actors: actors_map,
             active_events,
@@ -223,6 +235,27 @@ impl State {
         &self.inventory
     }
 
+    pub fn get_craft_inventory(&self) -> &HashMap<usize, usize> {
+        &self.craft_inventory
+    }
+
+    pub fn craft_help(&mut self){
+        for e in &self.inventory{
+            if self.craft_inventory.contains_key(&e) {
+                if let Some(entity)= self.get_entity(*e){
+                    println!("{} ---> ",entity.name)
+                }
+              if let Some(f) = self.craft_inventory.get(e){
+                if let Some(entity)= self.get_entity(*f){
+                    println!("{}",entity.name)
+
+               
+              }
+            }
+    }
+}
+    }
+
     pub fn get_entity(&self, entity_id: usize) -> Option<&Entity> {
         self.entities.get(&entity_id)
     }
@@ -270,7 +303,7 @@ impl State {
             }
             Condition::CommandIs(command_condition) => command_condition == command,
             Condition::ObjectInInventory(entity_id) => self.inventory.contains(entity_id),
-            Condition::Or (c1, c2) => {
+            Condition::Or(c1, c2) => {
                 self.check_condition(&self.conditions[*c1], command)
                     || self.check_condition(&self.conditions[*c2], command)
             }
@@ -281,7 +314,7 @@ impl State {
             }
             Condition::NotCommandIs(command_condition) => command_condition != command,
             Condition::NotObjectInInventory(entity_id) => !self.inventory.contains(entity_id),
-            Condition::NotAnd (c1, c2) => {
+            Condition::NotAnd(c1, c2) => {
                 !self.check_condition(&self.conditions[*c1], command)
                     || !self.check_condition(&self.conditions[*c2], command)
             }
@@ -315,10 +348,10 @@ impl State {
         self.inventory.remove(id);
         let removed = self.entities.get(&id);
         if let Some(removed) = removed {
-            println!("Consumed {}", removed.get_name());            
+            println!("Consumed {}", removed.get_name());
         }
-        
     }
-    
-   
+    pub fn why_not_mutable(&mut self, mega_id: usize) {
+        self.inventory.insert(mega_id);
+    }
 }

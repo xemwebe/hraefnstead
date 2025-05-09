@@ -1,14 +1,10 @@
 use crate::command::Command;
 use crate::direction::Direction;
 
-
-
 pub fn parse(input: &str) -> Command {
     let mut tokens = input.split_whitespace();
     let command = tokens.next().unwrap();
-    
-    
-   
+
     match command {
         "look" => Command::Look,
         "quit" => {
@@ -83,10 +79,22 @@ pub fn parse(input: &str) -> Command {
                 Command::None
             }
         }
+        "craft" => {
+            if let Some(thing) = tokens.next() {
+                thing.to_string();
+                if thing.contains("help"){ 
+                    Command::CraftHelp
+                }
+                else{
+                Command::Craft(thing.to_string())}
+            } else {
+                println!("You cant craft with that");
+                Command::None
+            }
+        }
         _ => {
             println!("I don't understand that command.");
             Command::None
         }
     }
 }
-

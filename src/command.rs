@@ -1,7 +1,8 @@
+use std::num::NonZeroI128;
+
 use crate::direction::Direction;
 
 use crate::state::State;
-
 
 use serde::{Deserialize, Serialize};
 
@@ -24,10 +25,12 @@ pub enum Command {
     //Empty,
     Eat(String),
     Consume(usize),
-    KillGoblin(Direction, usize)
-   // Denial,
+    KillGoblin(Direction, usize),
+    Craft(String),
+    CraftHelp,
+    // Denial,
     //TriggerDialog,
-   // StateOfDialog(usize),
+    // StateOfDialog(usize),
 }
 
 impl Command {
@@ -108,7 +111,6 @@ impl Command {
                     println!("You drop the {}", entity.get_name());
                     let room = state.get_room_mut();
                     room.add_entity(entity_id);
-                    
                 } else {
                     println!("You don't have a {} to drop.", thing);
                 }
@@ -132,27 +134,44 @@ impl Command {
             Command::DeActivateEvent(event_id) => state.de_activate_event(event_id),
             Command::ActivateEvent(event_id) => state.activate_event(event_id),
             Command::Examine(thing) => {
-            if let Some (id) = state.find_inventory(thing) {
-                if let Some(entity) = state.get_entity(id) {
-                    println!("{}", entity.description);
+                if let Some(id) = state.find_inventory(thing) {
+                    if let Some(entity) = state.get_entity(id) {
+                        println!("{}", entity.description);
+                    }
+                } else {
+                    println!("You need to have item in inventory!")
                 }
-            }
-            else{println!("You need to have item in inventory!")}
             }
             Command::Eat(thing) => {
-                if let Some (id) = state.find_inventory(thing) {
-                        state.consume_from_inventory(&id);
+                if let Some(id) = state.find_inventory(thing) {
+                    state.consume_from_inventory(&id);
+                } else {
+                    println!("You need to have item in inventory!")
                 }
-                else{println!("You need to have item in inventory!")}
             }
-            Command::Consume(id) => {state.consume_from_inventory(&id);
+            Command::Consume(id) => {
+                state.consume_from_inventory(&id);
+            }
+            Command::KillGoblin(direction, room_number) => state
+                .get_room_mut()
+                .kill_goblin(direction.clone(), *room_number),
+            Command::Craft(thing) => {
+                if let Some(id) = state.find_inventory(thing) {
+                    
+                    if let Some(super_id) = state.get_craft_inventory().get(&id) {
+                        
+                        state.why_not_mutable(*super_id);
+                        Command::Eat(thing.to_string()).execute(state);
+                    }
+                }
+            }
+            Command::CraftHelp => {
+                state.craft_help()
+            }
 
-            }
-            Command::KillGoblin(direction, room_number)=> {
-                state.get_room_mut().kill_goblin(direction.clone(), *room_number)},
-            
             _ => {}
         }
+
         true
     }
 }
