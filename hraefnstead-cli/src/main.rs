@@ -1,17 +1,5 @@
-mod actor;
-mod command;
-mod condition;
-mod direction;
-mod entity;
-mod event;
-mod parser;
-mod room;
-mod state;
-
-
 use clap::Parser;
-use parser::parse;
-use state::State;
+use hraefnstead_lib::{load_game, parser::parse, state::State, SAVE_FILE};
 use std::io::{self, Write};
 
 #[derive(Parser)]
@@ -28,18 +16,6 @@ struct Cli {
     /// Test mode, suppress loading default game settings
     #[arg(short, long)]
     test: bool,
-}
-
-const SAVE_FILE: &str = "adventure_state.json";
-
-fn load_game(name: &str) -> State {
-    let state_json = std::fs::read_to_string(name).expect("Failed to read game file");
-    serde_json::from_str(&state_json).expect("Failed to deserialize state")
-}
-
-fn save_game(name: &str, state: &State) {
-    let state_json = serde_json::to_string(&state).expect("Failed to serialize state");
-    std::fs::write(&name, state_json).expect("Failed to write game file");
 }
 
 fn main() {
@@ -78,5 +54,4 @@ fn main() {
             .expect("Failed to read line");
         input = input.to_lowercase();
     }
-   
 }

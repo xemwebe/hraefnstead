@@ -1,9 +1,5 @@
-use clap::Parser;
-use std::num::NonZeroI128;
-
 use crate::direction::Direction;
 use std::io::{self, Write};
-use gag::BufferRedirect;
 
 use crate::state::State;
 
@@ -70,31 +66,29 @@ impl Command {
                 if exits.is_empty() {
                     msg = format!("{msg}\nThere seems to be no exit.\n");
                 } else {
-                    msg= format!("{msg}Exits:");
+                    msg = format!("{msg}Exits:");
                     for (dir, _) in exits.iter() {
-                       
                         msg = format!("{msg}{dir} ");
                     }
-                    msg=format!("{msg}\n");
+                    msg = format!("{msg}\n");
                 }
                 let actors = room.get_actors();
                 if !actors.is_empty() {
                     for actor in actors.iter() {
                         if let Some(actor) = state.get_actor(*actor) {
-                         msg=format!("\n{msg}{}", actor.description);
+                            msg = format!("\n{msg}{}", actor.description);
                         }
                     }
-                    msg=format!("{msg}\n");
+                    msg = format!("{msg}\n");
                 }
                 let entities = room.get_entities();
                 if entities.is_empty() {
-                    msg= format!("{msg}\nThere is nothing here.")
-                  
+                    msg = format!("{msg}\nThere is nothing here.")
                 } else {
                     msg = format!("{msg}\nYou see:");
                     for e in entities.iter() {
                         if let Some(entity) = state.get_entity(*e) {
-                            msg= format!("{msg}\n{}", entity.get_name())
+                            msg = format!("{msg}\n{}", entity.get_name())
                         }
                     }
                 }
@@ -105,27 +99,27 @@ impl Command {
                     state.set_location(new_room);
                     Command::Look.execute(state);
                 } else {
-                    let msg= format!("\nYou can't go that way.");
+                    let msg = format!("\nYou can't go that way.");
                     state.log(&msg);
                 }
             }
             Command::Take(thing) => {
-                let mut msg= String::new();
+                let mut msg = String::new();
                 if state.take_entity_from_room(&thing) {
-                    msg= format!("\nTaken.");
+                    msg = format!("\nTaken.");
                 } else {
-                    msg=format!("\nThere is no {} here.", thing); 
+                    msg = format!("\nThere is no {} here.", thing);
                 }
                 state.log(&msg);
             }
             Command::Drop(thing) => {
                 let mut msg = String::new();
                 if let Some((entity_id, entity)) = state.get_from_inventory(&thing) {
-                  msg=format!("\nYou drop the {}", entity.get_name());
+                    msg = format!("\nYou drop the {}", entity.get_name());
                     let room = state.get_room_mut();
                     room.add_entity(entity_id);
                 } else {
-                   msg= format!("\nYou don't have a {} to drop.", thing);
+                    msg = format!("\nYou don't have a {} to drop.", thing);
                 }
                 state.log(&msg);
             }
@@ -133,12 +127,12 @@ impl Command {
                 let mut msg = String::new();
                 let inventory = state.get_inventory();
                 if inventory.is_empty() {
-                     msg =format!("\nYou are empty handed.");
+                    msg = format!("\nYou are empty handed.");
                 } else {
-                    let mut msg=format!{"You have:"};
+                    let mut msg = format! {"You have:"};
                     for entity_id in inventory.iter() {
                         if let Some(entity) = state.get_entity(*entity_id) {
-                            msg=format!("{msg}\n{}", entity.name);
+                            msg = format!("{msg}\n{}", entity.name);
                         }
                     }
                 }
@@ -156,18 +150,18 @@ impl Command {
                         msg = format!("{msg}\n{}", entity.description);
                     }
                 } else {
-                     msg = format!("{msg}\nYou need to have item in inventory!");
+                    msg = format!("{msg}\nYou need to have item in inventory!");
                 }
-                 state.log(&msg)
+                state.log(&msg)
             }
             Command::Eat(thing) => {
                 let mut msg = String::new();
                 if let Some(id) = state.find_inventory(thing) {
                     state.consume_from_inventory(&id);
                 } else {
-                      msg = format!("{msg}\nYou need to have item in inventory!")
+                    msg = format!("{msg}\nYou need to have item in inventory!")
                 }
-                 state.log(&msg)
+                state.log(&msg)
             }
             Command::Consume(id) => {
                 state.consume_from_inventory(&id);
@@ -191,7 +185,7 @@ impl Command {
                 let mut cmd = Command::None;
                 let mut msg = String::new();
                 while cmd == Command::None {
-                     msg =format!("Would you like to try again? (yes/no): ");
+                    msg = format!("Would you like to try again? (yes/no): ");
                     let mut input = String::new();
                     io::stdout().flush().expect("Failed to flush");
                     io::stdin()
@@ -206,7 +200,7 @@ impl Command {
                         _ => Command::None,
                     };
                 }
-                 state.log(&msg);
+                state.log(&msg);
                 return cmd.execute(state);
             }
 

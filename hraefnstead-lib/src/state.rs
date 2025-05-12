@@ -6,7 +6,6 @@ use crate::entity::Entity;
 use crate::event::Dialog;
 use crate::event::Event;
 use crate::room::Room;
-use gag::BufferRedirect;
 
 use std::collections::{HashMap, HashSet};
 
@@ -140,7 +139,6 @@ impl State {
             Condition::And(12, 13),
             Condition::And(14, 0),
             Condition::ObjectInInventory(5),
-            
         ];
 
         let events = vec![
@@ -252,7 +250,6 @@ impl State {
                 None
             }
         } else {
-            
             None
         }
     }
@@ -325,7 +322,7 @@ impl State {
                 self.check_condition(&self.conditions[*c1], command)
                     && self.check_condition(&self.conditions[*c2], command)
             }
-            Condition::Actor(actor_id)=> self.actors.contains_key(actor_id),
+            Condition::Actor(actor_id) => self.actors.contains_key(actor_id),
             Condition::CommandIs(command_condition) => command_condition == command,
             Condition::ObjectInInventory(entity_id) => self.inventory.contains(entity_id),
             Condition::Or(c1, c2) => {
@@ -379,9 +376,9 @@ impl State {
     pub fn why_not_mutable(&mut self, mega_id: usize) {
         self.inventory.insert(mega_id);
     }
-    
-    pub fn log(&mut self, msg: &str) { 
-         self.log = format!("{}\n{msg}", self.log);
+
+    pub fn log(&mut self, msg: &str) {
+        self.log = format!("{}\n{msg}", self.log);
     }
 
     pub fn get_log(&mut self) -> String {

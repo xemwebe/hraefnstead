@@ -1,6 +1,5 @@
 use crate::command::Command;
 use crate::direction::Direction;
-use gag::BufferRedirect;
 
 pub fn parse(input: &str) -> Command {
     let mut tokens = input.split_whitespace();

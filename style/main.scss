@@ -1,0 +1,22 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.scrollabletextbox {
+    height: 600px; /* Set the height of the text area */
+    width: 800px; /* Set the width of the text area */
+    font-family: Verdana, Tahoma, Arial, Helvetica, sans-serif; /* Set the font */
+    font-size: 120%; /* Set the font size */
+    overflow: scroll; /* Add scrollbars */
+}
+
+.command {
+    text-align: center;
+    font-size: 120%;
+}
+
+.command_input {
+    width: 700px;
+    font-size: 140%;
+}
