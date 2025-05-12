@@ -13,4 +13,5 @@ pub enum Condition {
     NotAnd(usize, usize),
     NotObjectInInventory(usize),
     NotOr(usize, usize),
+    Actor(usize),
 }

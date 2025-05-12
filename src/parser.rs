@@ -1,5 +1,6 @@
 use crate::command::Command;
 use crate::direction::Direction;
+use gag::BufferRedirect;
 
 pub fn parse(input: &str) -> Command {
     let mut tokens = input.split_whitespace();
@@ -79,14 +80,22 @@ pub fn parse(input: &str) -> Command {
                 Command::None
             }
         }
+        "attack" => {
+            if let Some(thing) = tokens.next() {
+                Command::Attack(thing.to_string())
+            } else {
+                println!("You need to specify an enemy to atack.");
+                Command::None
+            }
+        }
         "craft" => {
             if let Some(thing) = tokens.next() {
                 thing.to_string();
-                if thing.contains("help"){ 
+                if thing.contains("help") {
                     Command::CraftHelp
+                } else {
+                    Command::Craft(thing.to_string())
                 }
-                else{
-                Command::Craft(thing.to_string())}
             } else {
                 println!("You cant craft with that");
                 Command::None
