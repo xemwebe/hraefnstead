@@ -6,6 +6,7 @@ use crate::entity::Entity;
 use crate::event::Dialog;
 use crate::event::Event;
 use crate::room::Room;
+use gag::BufferRedirect;
 
 use std::collections::{HashMap, HashSet};
 
@@ -15,6 +16,7 @@ use serde::{Deserialize, Serialize};
 pub struct State {
     loc: usize,
     inventory: HashSet<usize>,
+    craft_inventory: HashMap<usize, usize>,
     rooms: Vec<Room>,
     entities: HashMap<usize, Entity>,
     actors: HashMap<usize, Actor>,
@@ -23,6 +25,7 @@ pub struct State {
     dialogs: Vec<Dialog>,
     conditions: Vec<Condition>,
     file_name: String,
+    log: String,
 }
 
 impl State {
@@ -70,6 +73,14 @@ impl State {
             bag_of_chips_aliases,
         );
 
+        let mut golden_armor_aliases = HashSet::new();
+        golden_armor_aliases.insert("armor".to_string());
+        let golden_armor = Entity::new(
+            "armor",
+            "A really shiny, yet very powerful piece of armor",
+            golden_armor_aliases,
+        );
+        // golden_armor_aliases.insert("golden armor".to_string());
         let mut dead_goblin_aliases = HashSet::new();
         dead_goblin_aliases.insert("goblin".to_string());
         dead_goblin_aliases.insert("corpse".to_string());
@@ -84,7 +95,8 @@ impl State {
         entity_map.insert(2, coin);
         entity_map.insert(3, vending_machine);
         entity_map.insert(4, bag_of_chips);
-        entity_map.insert(5, dead_goblin);
+        entity_map.insert(5, golden_armor);
+        entity_map.insert(6, dead_goblin);
 
         let mut actors_map = HashMap::new();
         let mut goblin_aliases = HashSet::new();
@@ -107,6 +119,9 @@ impl State {
         let mut entrance_entities = HashSet::new();
         entrance_entities.insert(3);
 
+        let mut craft_inventory: HashMap<usize, usize> = HashMap::new();
+        craft_inventory.insert(1, 5);
+
         let conditions = vec![
             Condition::Location(2),
             Condition::CommandIs(Command::Examine("bed".to_string())),
@@ -120,6 +135,12 @@ impl State {
             Condition::CommandIs(Command::Use("goblin".to_string())),
             Condition::And(9, 8),
             Condition::And(10, 0),
+            Condition::CommandIs(Command::Attack("goblin".to_string())),
+            Condition::Actor(1),
+            Condition::And(12, 13),
+            Condition::And(14, 0),
+            Condition::ObjectInInventory(5),
+            
         ];
 
         let events = vec![
@@ -137,7 +158,13 @@ impl State {
                 vec![]),
             Event::new(11,
                 "The goblin doesn't seem to take much interest in you, but he hungrily takes the chips.\nThe goblins face turns green, than grey.\nHe falls to the floow and doesn't move anymore.".to_string(),
-                vec![Command::AddExit(Direction::North, 3), Command::RemoveActor(1), Command::AddItemToRoom(5)]),
+                vec![Command::AddExit(Direction::North, 3), Command::RemoveActor(1), Command::AddItemToRoom(6)]),
+            Event::new(15,
+                "The Goblin's Fist hits (you) like a truck and lands you on the ground, where you get knocked out".to_string(),
+                vec![Command::GameOver]),
+            Event::new(16,
+                "!!!Congratulations you crafted the golden armor and won the game!!!".to_string(),
+                vec![Command::GameOver] ),
         ];
 
         let dialogs = vec![];
@@ -145,6 +172,7 @@ impl State {
         let mut active_events = HashSet::new();
         active_events.insert(0);
         active_events.insert(2);
+        active_events.insert(5);
 
         Self {
             loc: 0,
@@ -179,12 +207,14 @@ impl State {
                 ),
             ],
             inventory: HashSet::new(),
+            craft_inventory,
             entities: entity_map,
             actors: actors_map,
             active_events,
             events,
             dialogs,
             conditions,
+            log: String::new(),
             file_name: super::SAVE_FILE.to_string(),
         }
     }
@@ -206,6 +236,7 @@ impl State {
     }
 
     pub fn get_from_inventory(&mut self, thing: &str) -> Option<(usize, &Entity)> {
+        let mut msg = String::new();
         let mut found_entity = None;
         for id in self.inventory.iter() {
             if let Some(entity) = self.entities.get(id) {
@@ -221,13 +252,32 @@ impl State {
                 None
             }
         } else {
-            println!("You don't have {thing}.");
+            
             None
         }
     }
 
     pub fn get_inventory(&self) -> &HashSet<usize> {
         &self.inventory
+    }
+
+    pub fn get_craft_inventory(&self) -> &HashMap<usize, usize> {
+        &self.craft_inventory
+    }
+
+    pub fn craft_help(&mut self) {
+        for e in &self.inventory {
+            if self.craft_inventory.contains_key(&e) {
+                if let Some(entity) = self.get_entity(*e) {
+                    println!("{} ---> ", entity.name)
+                }
+                if let Some(f) = self.craft_inventory.get(e) {
+                    if let Some(entity) = self.get_entity(*f) {
+                        println!("{}", entity.name)
+                    }
+                }
+            }
+        }
     }
 
     pub fn get_entity(&self, entity_id: usize) -> Option<&Entity> {
@@ -275,6 +325,7 @@ impl State {
                 self.check_condition(&self.conditions[*c1], command)
                     && self.check_condition(&self.conditions[*c2], command)
             }
+            Condition::Actor(actor_id)=> self.actors.contains_key(actor_id),
             Condition::CommandIs(command_condition) => command_condition == command,
             Condition::ObjectInInventory(entity_id) => self.inventory.contains(entity_id),
             Condition::Or(c1, c2) => {
@@ -324,5 +375,18 @@ impl State {
         if let Some(removed) = removed {
             println!("Consumed {}", removed.get_name());
         }
+    }
+    pub fn why_not_mutable(&mut self, mega_id: usize) {
+        self.inventory.insert(mega_id);
+    }
+    
+    pub fn log(&mut self, msg: &str) { 
+         self.log = format!("{}\n{msg}", self.log);
+    }
+
+    pub fn get_log(&mut self) -> String {
+        let log = self.log.clone();
+        self.log = String::new();
+        log
     }
 }

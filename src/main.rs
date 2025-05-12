@@ -8,6 +8,7 @@ mod parser;
 mod room;
 mod state;
 
+
 use clap::Parser;
 use parser::parse;
 use state::State;
@@ -61,11 +62,14 @@ fn main() {
         let command = parse(&input);
         if let Some(command_stack) = state.special_event_triggered(&command) {
             for command in command_stack {
-                command.execute(&mut state);
+                if !command.execute(&mut state) {
+                    return;
+                }
             }
         } else if !command.execute(&mut state) {
             break;
         }
+        println!("{}", state.get_log());
         input = String::new();
         print!("\n---> ");
         io::stdout().flush().expect("Failed to flush");
@@ -74,4 +78,5 @@ fn main() {
             .expect("Failed to read line");
         input = input.to_lowercase();
     }
+   
 }

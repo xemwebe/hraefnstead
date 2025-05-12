@@ -1,4 +1,9 @@
+use clap::Parser;
+use std::num::NonZeroI128;
+
 use crate::direction::Direction;
+use std::io::{self, Write};
+use gag::BufferRedirect;
 
 use crate::state::State;
 
@@ -25,8 +30,13 @@ pub enum Command {
     Eat(String),
     Consume(usize),
     AddExit(Direction, usize), // Denial,
-                               //TriggerDialog,
-                               // StateOfDialog(usize),
+    Craft(String),
+    CraftHelp,
+    Attack(String),
+    GameOver,
+    // Denial,
+    //TriggerDialog,
+    // StateOfDialog(usize),
 }
 
 impl Command {
@@ -55,74 +65,84 @@ impl Command {
             }
             Command::Look => {
                 let room = state.get_room();
-                println!("{}", room.get_description());
+                let mut msg = format!("{}", room.get_description());
                 let exits = room.get_exits();
                 if exits.is_empty() {
-                    println!("There seems to be no exit.")
+                    msg = format!("{msg}\nThere seems to be no exit.\n");
                 } else {
-                    print!("Exits: ");
+                    msg= format!("{msg}Exits:");
                     for (dir, _) in exits.iter() {
-                        print!("{dir} ");
+                       
+                        msg = format!("{msg}{dir} ");
                     }
-                    println!();
+                    msg=format!("{msg}\n");
                 }
                 let actors = room.get_actors();
                 if !actors.is_empty() {
                     for actor in actors.iter() {
                         if let Some(actor) = state.get_actor(*actor) {
-                            println!("{}", actor.description);
+                         msg=format!("\n{msg}{}", actor.description);
                         }
                     }
-                    println!();
+                    msg=format!("{msg}\n");
                 }
                 let entities = room.get_entities();
                 if entities.is_empty() {
-                    println!("There is nothing here.")
+                    msg= format!("{msg}\nThere is nothing here.")
+                  
                 } else {
-                    println!("You see:");
+                    msg = format!("{msg}\nYou see:");
                     for e in entities.iter() {
                         if let Some(entity) = state.get_entity(*e) {
-                            println!("{}", entity.get_name());
+                            msg= format!("{msg}\n{}", entity.get_name())
                         }
                     }
                 }
+                state.log(&msg);
             }
             Command::Move(dir) => {
                 if let Some(new_room) = state.get_exit(dir.clone()) {
                     state.set_location(new_room);
                     Command::Look.execute(state);
                 } else {
-                    println!("You can't go that way.");
+                    let msg= format!("\nYou can't go that way.");
+                    state.log(&msg);
                 }
             }
             Command::Take(thing) => {
+                let mut msg= String::new();
                 if state.take_entity_from_room(&thing) {
-                    println!("Taken.");
+                    msg= format!("\nTaken.");
                 } else {
-                    println!("There is no {} here.", thing);
+                    msg=format!("\nThere is no {} here.", thing); 
                 }
+                state.log(&msg);
             }
             Command::Drop(thing) => {
+                let mut msg = String::new();
                 if let Some((entity_id, entity)) = state.get_from_inventory(&thing) {
-                    println!("You drop the {}", entity.get_name());
+                  msg=format!("\nYou drop the {}", entity.get_name());
                     let room = state.get_room_mut();
                     room.add_entity(entity_id);
                 } else {
-                    println!("You don't have a {} to drop.", thing);
+                   msg= format!("\nYou don't have a {} to drop.", thing);
                 }
+                state.log(&msg);
             }
             Command::Inventory => {
+                let mut msg = String::new();
                 let inventory = state.get_inventory();
                 if inventory.is_empty() {
-                    println!("You are empty handed.");
+                     msg =format!("\nYou are empty handed.");
                 } else {
-                    println!("You have:");
+                    let mut msg=format!{"You have:"};
                     for entity_id in inventory.iter() {
                         if let Some(entity) = state.get_entity(*entity_id) {
-                            println!("{}", entity.name);
+                            msg=format!("{msg}\n{}", entity.name);
                         }
                     }
                 }
+                state.log(&msg)
             }
             Command::AddItemToRoom(entity_id) => {
                 state.get_room_mut().add_entity(*entity_id);
@@ -130,32 +150,69 @@ impl Command {
             Command::DeActivateEvent(event_id) => state.de_activate_event(event_id),
             Command::ActivateEvent(event_id) => state.activate_event(event_id),
             Command::Examine(thing) => {
+                let mut msg = String::new();
                 if let Some(id) = state.find_inventory(thing) {
                     if let Some(entity) = state.get_entity(id) {
-                        println!("{}", entity.description);
+                        msg = format!("{msg}\n{}", entity.description);
                     }
                 } else {
-                    println!("You need to have item in inventory!")
+                     msg = format!("{msg}\nYou need to have item in inventory!");
                 }
+                 state.log(&msg)
             }
             Command::Eat(thing) => {
+                let mut msg = String::new();
                 if let Some(id) = state.find_inventory(thing) {
                     state.consume_from_inventory(&id);
                 } else {
-                    println!("You need to have item in inventory!")
+                      msg = format!("{msg}\nYou need to have item in inventory!")
                 }
+                 state.log(&msg)
             }
             Command::Consume(id) => {
                 state.consume_from_inventory(&id);
             }
+            Command::Craft(thing) => {
+                if let Some(id) = state.find_inventory(thing) {
+                    if let Some(super_id) = state.get_craft_inventory().get(&id) {
+                        state.why_not_mutable(*super_id);
+                        Command::Eat(thing.to_string()).execute(state);
+                    }
+                }
+            }
+            Command::CraftHelp => state.craft_help(),
             Command::AddExit(direction, room_number) => state
                 .get_room_mut()
                 .add_exit(direction.clone(), *room_number),
             Command::RemoveActor(actor_id) => {
                 state.get_room_mut().remove_actor(*actor_id);
             }
+            Command::GameOver => {
+                let mut cmd = Command::None;
+                let mut msg = String::new();
+                while cmd == Command::None {
+                     msg =format!("Would you like to try again? (yes/no): ");
+                    let mut input = String::new();
+                    io::stdout().flush().expect("Failed to flush");
+                    io::stdin()
+                        .read_line(&mut input)
+                        .expect("Failed to read line");
+                    input = input.to_lowercase();
+                    let mut tokens = input.split_whitespace();
+                    let answer = tokens.next().unwrap();
+                    cmd = match answer {
+                        "yes" => Command::Load(state.get_file_name().to_string()),
+                        "no" => Command::Quit,
+                        _ => Command::None,
+                    };
+                }
+                 state.log(&msg);
+                return cmd.execute(state);
+            }
+
             _ => {}
         }
+
         true
     }
 }

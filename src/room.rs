@@ -1,3 +1,4 @@
+use crate::command::Command;
 use crate::direction::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};

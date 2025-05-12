@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use gag::BufferRedirect;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Actor {
