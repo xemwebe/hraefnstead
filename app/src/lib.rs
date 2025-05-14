@@ -4,6 +4,7 @@ use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
+use hraefnstead_lib::{load_game, parser::parse, state::State, SAVE_FILE};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -50,14 +51,24 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     use leptos::ev::SubmitEvent;
     use leptos::html::Input;
-
+    
+    let mut state = State::new();
     // Creates a reactive value to update the button
     let command = RwSignal::new(String::new());
     let command_element: NodeRef<Input> = NodeRef::new();
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         let value = command_element.get().expect("<command> to exist").value();
-        command.set(format!("{}\n\n---> {}", command.get(), value));
+        
+        let new_command = parse(&value);
+        if let Some(command_stack) = state.special_event_triggered(&new_command) {
+            for new_command in command_stack {
+                new_command.execute(&mut state);
+            }
+        } else {
+            new_command.execute(&mut state);
+        }
+        command.set(format!("{}\n{}\n\n---> {}\n", command.get(), state.get_log(), value));
         command_element
             .get()
             .expect("<command> to exist")
