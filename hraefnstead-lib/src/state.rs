@@ -1,3 +1,5 @@
+
+
 use crate::actor::Actor;
 use crate::command::Command;
 use crate::condition::Condition;
@@ -263,18 +265,22 @@ impl State {
     }
 
     pub fn craft_help(&mut self) {
+        let mut msg =String::new();
         for e in &self.inventory {
             if self.craft_inventory.contains_key(&e) {
                 if let Some(entity) = self.get_entity(*e) {
+                    msg = format!("{} ---> ", entity.name);
                     println!("{} ---> ", entity.name)
                 }
                 if let Some(f) = self.craft_inventory.get(e) {
                     if let Some(entity) = self.get_entity(*f) {
-                        println!("{}", entity.name)
+                        msg =format!("{msg}{}", entity.name);
+                       
                     }
                 }
             }
         }
+        self.log(&msg);
     }
 
     pub fn get_entity(&self, entity_id: usize) -> Option<&Entity> {
@@ -303,16 +309,20 @@ impl State {
         self.actors.get(&actor_id)
     }
 
-    pub fn special_event_triggered(&self, command: &Command) -> Option<Vec<Command>> {
+    pub fn special_event_triggered(&mut self, command: &Command) -> Option<Vec<Command>> {
+        let mut msg = String::new();
+        let mut command_stack = None;
         for event_id in self.active_events.iter() {
             let event = &self.events[*event_id];
             let condition = &self.conditions[event.condition_id];
             if self.check_condition(condition, command) {
-                println!("{}", event.message);
-                return Some(event.command_stack.clone());
+                msg= format!("{}\n", event.message);
+                command_stack = Some(event.command_stack.clone());
+                break;
             }
         }
-        None
+        self.log(&msg);
+        command_stack
     }
 
     pub fn check_condition(&self, condition: &Condition, command: &Command) -> bool {
@@ -386,4 +396,24 @@ impl State {
         self.log = String::new();
         log
     }
+    
+    
 }
+#[cfg(test)]
+mod tests {
+   use super::*;
+    use crate::state::State;
+
+    
+
+
+    #[test]
+    pub fn it_works(){
+        let mut state=State::new();
+        state.inventory.insert(1);
+    Command::Craft("gold".to_string()).execute( &mut state);
+        assert!(state.inventory.contains(&5) && !state.inventory.contains(&1))
+        
+}
+}
+
