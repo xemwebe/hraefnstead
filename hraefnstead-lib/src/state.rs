@@ -399,21 +399,21 @@ impl State {
     
     
 }
-//#[cfg(test)]
-//mod tests {
-  //  use super::*;
-    //use crate::state::State;
+#[cfg(test)]
+mod tests {
+   use super::*;
+    use crate::state::State;
 
     
 
 
-    //#[test]
-    //pub fn it_works(){
-      //  let state=State::new();
-        //inventory.insert(1);
-    //Command::Craft("gold".to_string()).execute(self);
-      //  assert!(self.inventory.contains(&5) && !self.inventory.contains(&1))
+    #[test]
+    pub fn it_works(){
+        let mut state=State::new();
+        state.inventory.insert(1);
+    Command::Craft("gold".to_string()).execute( &mut state);
+        assert!(state.inventory.contains(&5) && !state.inventory.contains(&1))
         
-//}
-//}
+}
+}
 
