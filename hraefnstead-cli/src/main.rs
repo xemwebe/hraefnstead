@@ -1,4 +1,5 @@
 use clap::Parser;
+use hraefnstead_lib::victory::Victory;
 use hraefnstead_lib::{load_game, parser::parse, state::State, SAVE_FILE};
 use std::io::{self, Write};
 
@@ -33,17 +34,68 @@ fn main() {
         };
         load_game(&game_file)
     };
-
+    let mut victory = Victory::None;
     loop {
         let command = parse(&input);
         if let Some(command_stack) = state.special_event_triggered(&command) {
             for command in command_stack {
-                if !command.execute(&mut state) {
-                    return;
-                }
+                victory = command.execute(&mut state);
             }
-        } else if !command.execute(&mut state) {
-            break;
+        } else {
+            victory = command.execute(&mut state);
+        }
+
+        match victory {
+            Victory::GameOver => {
+                loop {
+                    let msg = "Would you like to try again? (yes/no): ".to_string();
+                    state.log(&msg);
+                    println!("{}", state.get_log());
+                    let mut input = String::new();
+                    io::stdout().flush().expect("Failed to flush");
+                    io::stdin()
+                        .read_line(&mut input)
+                        .expect("Failed to read line");
+                    input = input.to_lowercase();
+                    let mut tokens = input.split_whitespace();
+                    let answer = tokens.next().unwrap();
+                    match answer {
+                        "yes" => {
+                            state = load_game(state.get_file_name());
+                            break;
+                        }
+                        "no" => return,
+                        _ => {}
+                    };
+                }
+                //state.log(&msg);
+            }
+            Victory::Won => {
+                loop {
+                    let msg = "!!!Congratulations You won the Game!!!\nWould you like to start a new Game? (yes/no): ".to_string();
+                    state.log(&msg);
+                    println!("{}", state.get_log());
+                    let mut input = String::new();
+                    io::stdout().flush().expect("Failed to flush");
+                    io::stdin()
+                        .read_line(&mut input)
+                        .expect("Failed to read line");
+                    input = input.to_lowercase();
+                    let mut tokens = input.split_whitespace();
+                    let answer = tokens.next().unwrap();
+                    match answer {
+                        "yes" => {
+                            state = State::new();
+                            break;
+                        }
+                        "no" => return,
+                        _ => {}
+                    };
+                }
+                //state.log(&msg);
+            }
+            Victory::Quit => return,
+            Victory::None => {}
         }
         println!("{}", state.get_log());
         input = String::new();
@@ -53,5 +105,6 @@ fn main() {
             .read_line(&mut input)
             .expect("Failed to read line");
         input = input.to_lowercase();
+        //parse(&input);
     }
 }

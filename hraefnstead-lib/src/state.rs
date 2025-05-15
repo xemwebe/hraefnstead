@@ -1,11 +1,9 @@
-
-
 use crate::actor::Actor;
 use crate::command::Command;
 use crate::condition::Condition;
 use crate::direction::Direction;
 use crate::entity::Entity;
-use crate::event::Dialog;
+//use crate::event::Dialog;
 use crate::event::Event;
 use crate::room::Room;
 
@@ -23,12 +21,16 @@ pub struct State {
     actors: HashMap<usize, Actor>,
     active_events: HashSet<usize>,
     events: Vec<Event>,
-    dialogs: Vec<Dialog>,
+    //dialogs: Vec<Dialog>,
     conditions: Vec<Condition>,
     file_name: String,
     log: String,
 }
-
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl State {
     /// Create a very simple game state for testing.
     pub fn new() -> State {
@@ -141,6 +143,8 @@ impl State {
             Condition::And(12, 13),
             Condition::And(14, 0),
             Condition::ObjectInInventory(5),
+            Condition::CommandIs(Command::Craft("gold".to_string())),
+            Condition::And(16, 17),
         ];
 
         let events = vec![
@@ -162,17 +166,18 @@ impl State {
             Event::new(15,
                 "The Goblin's Fist hits (you) like a truck and lands you on the ground, where you get knocked out".to_string(),
                 vec![Command::GameOver]),
-            Event::new(16,
-                "!!!Congratulations you crafted the golden armor and won the game!!!".to_string(),
-                vec![Command::GameOver] ),
+            // Event::new(18,
+            //     "!!!Congratulations you crafted the golden armor and won the game!!!".to_string(),
+            //     vec![Command::Won] ),
         ];
 
-        let dialogs = vec![];
+        //let dialogs = vec![];
 
         let mut active_events = HashSet::new();
         active_events.insert(0);
         active_events.insert(2);
         active_events.insert(5);
+        // active_events.insert(6);
 
         Self {
             loc: 0,
@@ -212,7 +217,7 @@ impl State {
             actors: actors_map,
             active_events,
             events,
-            dialogs,
+            //dialogs,
             conditions,
             log: String::new(),
             file_name: super::SAVE_FILE.to_string(),
@@ -236,7 +241,6 @@ impl State {
     }
 
     pub fn get_from_inventory(&mut self, thing: &str) -> Option<(usize, &Entity)> {
-        let mut msg = String::new();
         let mut found_entity = None;
         for id in self.inventory.iter() {
             if let Some(entity) = self.entities.get(id) {
@@ -265,17 +269,15 @@ impl State {
     }
 
     pub fn craft_help(&mut self) {
-        let mut msg =String::new();
+        let mut msg = String::new();
         for e in &self.inventory {
-            if self.craft_inventory.contains_key(&e) {
+            if self.craft_inventory.contains_key(e) {
                 if let Some(entity) = self.get_entity(*e) {
                     msg = format!("{} ---> ", entity.name);
-                    println!("{} ---> ", entity.name)
                 }
                 if let Some(f) = self.craft_inventory.get(e) {
                     if let Some(entity) = self.get_entity(*f) {
-                        msg =format!("{msg}{}", entity.name);
-                       
+                        msg = format!("{msg}{}", entity.name);
                     }
                 }
             }
@@ -316,7 +318,7 @@ impl State {
             let event = &self.events[*event_id];
             let condition = &self.conditions[event.condition_id];
             if self.check_condition(condition, command) {
-                msg= format!("{}\n", event.message);
+                msg = format!("{}\n", event.message);
                 command_stack = Some(event.command_stack.clone());
                 break;
             }
@@ -378,10 +380,13 @@ impl State {
     }
     pub fn consume_from_inventory(&mut self, id: &usize) {
         self.inventory.remove(id);
-        let removed = self.entities.get(&id);
+        let mut msg = String::new();
+        let removed = self.entities.get(id);
         if let Some(removed) = removed {
+            msg = format!("{msg}\nConsumed {}", removed.get_name());
             println!("Consumed {}", removed.get_name());
         }
+        self.log(&msg);
     }
     pub fn why_not_mutable(&mut self, mega_id: usize) {
         self.inventory.insert(mega_id);
@@ -396,24 +401,25 @@ impl State {
         self.log = String::new();
         log
     }
-    
-    
 }
 #[cfg(test)]
 mod tests {
-   use super::*;
+    use super::*;
     use crate::state::State;
-
-    
-
+    use crate::victory::Victory;
 
     #[test]
-    pub fn it_works(){
-        let mut state=State::new();
+    pub fn it_works() {
+        let mut state = State::new();
         state.inventory.insert(1);
-    Command::Craft("gold".to_string()).execute( &mut state);
+        Command::Craft("gold".to_string()).execute(&mut state);
         assert!(state.inventory.contains(&5) && !state.inventory.contains(&1))
-        
-}
-}
+    }
 
+    #[test]
+    fn does_it_work() {
+        let mut state = State::new();
+        state.inventory.insert(2);
+        assert_eq!(Command::Inventory.execute(&mut state), Victory::None);
+    }
+}
