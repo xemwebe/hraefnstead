@@ -1,4 +1,3 @@
-use crate::command::Command;
 use crate::direction::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -38,7 +37,7 @@ impl Room {
     }
 
     pub fn get_exit(&self, dir: Direction) -> Option<usize> {
-        self.exits.get(&dir).map(|&x| x)
+        self.exits.get(&dir).copied()
     }
 
     pub fn get_entities(&self) -> &HashSet<usize> {

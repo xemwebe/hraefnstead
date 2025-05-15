@@ -1,7 +1,8 @@
 use crate::direction::Direction;
-use std::io::{self, Write};
+//use std::io::{self, Write};
 
 use crate::state::State;
+use crate::victory::Victory;
 
 use serde::{Deserialize, Serialize};
 
@@ -30,16 +31,17 @@ pub enum Command {
     CraftHelp,
     Attack(String),
     GameOver,
+    Won,
     // Denial,
     //TriggerDialog,
     // StateOfDialog(usize),
 }
 
 impl Command {
-    pub fn execute(&self, state: &mut State) -> bool {
+    pub fn execute(&self, state: &mut State) -> Victory {
         match self {
             Command::Quit => {
-                return false;
+                return Victory::Quit;
             }
             Command::Save(name) => {
                 let file_name = if name.is_empty() {
@@ -56,17 +58,17 @@ impl Command {
                 } else {
                     name
                 };
-                super::load_game(&file_name);
+                super::load_game(file_name);
                 Command::Look.execute(state);
             }
             Command::Look => {
                 let room = state.get_room();
-                let mut msg = format!("{}", room.get_description());
+                let mut msg = room.get_description().to_string();
                 let exits = room.get_exits();
                 if exits.is_empty() {
                     msg = format!("{msg}\nThere seems to be no exit.\n");
                 } else {
-                    msg = format!("{msg}Exits:");
+                    msg = format!("{msg}\nExits:");
                     for (dir, _) in exits.iter() {
                         msg = format!("{msg}{dir} ");
                     }
@@ -99,37 +101,36 @@ impl Command {
                     state.set_location(new_room);
                     Command::Look.execute(state);
                 } else {
-                    let msg = format!("\nYou can't go that way.");
+                    let msg = "\nYou can't go that way.".to_string();
                     state.log(&msg);
                 }
             }
             Command::Take(thing) => {
-                let mut msg = String::new();
-                if state.take_entity_from_room(&thing) {
-                    msg = format!("\nTaken.");
+                let msg = if state.take_entity_from_room(thing) {
+                    "\nTaken.".to_string()
                 } else {
-                    msg = format!("\nThere is no {} here.", thing);
-                }
+                    format!("\nThere is no {thing} here.")
+                };
                 state.log(&msg);
             }
             Command::Drop(thing) => {
-                let mut msg = String::new();
-                if let Some((entity_id, entity)) = state.get_from_inventory(&thing) {
+                let msg;
+                if let Some((entity_id, entity)) = state.get_from_inventory(thing) {
                     msg = format!("\nYou drop the {}", entity.get_name());
                     let room = state.get_room_mut();
                     room.add_entity(entity_id);
                 } else {
-                    msg = format!("\nYou don't have a {} to drop.", thing);
+                    msg = format!("\nYou don't have a {thing} to drop.");
                 }
                 state.log(&msg);
             }
             Command::Inventory => {
-                let mut msg = String::new();
+                let mut msg;
                 let inventory = state.get_inventory();
                 if inventory.is_empty() {
-                    msg = format!("\nYou are empty handed.");
+                    msg = "\nYou are empty handed.".to_string();
                 } else {
-                    let mut msg = format! {"You have:"};
+                    msg = "You have:".to_string();
                     for entity_id in inventory.iter() {
                         if let Some(entity) = state.get_entity(*entity_id) {
                             msg = format!("{msg}\n{}", entity.name);
@@ -164,13 +165,14 @@ impl Command {
                 state.log(&msg)
             }
             Command::Consume(id) => {
-                state.consume_from_inventory(&id);
+                state.consume_from_inventory(id);
             }
             Command::Craft(thing) => {
                 if let Some(id) = state.find_inventory(thing) {
                     if let Some(super_id) = state.get_craft_inventory().get(&id) {
                         state.why_not_mutable(*super_id);
                         Command::Eat(thing.to_string()).execute(state);
+                        return Victory::Won;
                     }
                 }
             }
@@ -182,31 +184,33 @@ impl Command {
                 state.get_room_mut().remove_actor(*actor_id);
             }
             Command::GameOver => {
-                let mut cmd = Command::None;
-                let mut msg = String::new();
-                while cmd == Command::None {
-                    msg = format!("Would you like to try again? (yes/no): ");
-                    let mut input = String::new();
-                    io::stdout().flush().expect("Failed to flush");
-                    io::stdin()
-                        .read_line(&mut input)
-                        .expect("Failed to read line");
-                    input = input.to_lowercase();
-                    let mut tokens = input.split_whitespace();
-                    let answer = tokens.next().unwrap();
-                    cmd = match answer {
-                        "yes" => Command::Load(state.get_file_name().to_string()),
-                        "no" => Command::Quit,
-                        _ => Command::None,
-                    };
-                }
-                state.log(&msg);
-                return cmd.execute(state);
+                return Victory::GameOver;
+                // let mut cmd = Command::None;
+                // let mut msg = String::new();
+                // while cmd == Command::None {
+                //     msg = "Would you like to try again? (yes/no): ".to_string();
+                //     let mut input = String::new();
+                //     io::stdout().flush().expect("Failed to flush");
+                //     io::stdin()
+                //         .read_line(&mut input)
+                //         .expect("Failed to read line");
+                //     input = input.to_lowercase();
+                //     let mut tokens = input.split_whitespace();
+                //     let answer = tokens.next().unwrap();
+                //     cmd = match answer {
+                //         "yes" => Command::Load(state.get_file_name().to_string()),
+                //         "no" => Command::Quit,
+                //         _ => Command::None,
+                //     };
+                // }
+                // state.log(&msg);
+                // return cmd.execute(state);
             }
+            Command::Won => return Victory::Won,
 
             _ => {}
         }
 
-        true
+        Victory::None
     }
 }

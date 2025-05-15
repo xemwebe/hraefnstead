@@ -1,10 +1,10 @@
+use hraefnstead_lib::{parser::parse, state::State};
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
-use hraefnstead_lib::{load_game, parser::parse, state::State, SAVE_FILE};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -51,25 +51,31 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     use leptos::ev::SubmitEvent;
     use leptos::html::Input;
-    
-    let mut state = State::new();
+
+    let state = RwSignal::new(State::new());
     // Creates a reactive value to update the button
-    let command = RwSignal::new(String::new());
-    let command_element: NodeRef<Input> = NodeRef::new();
+    let output = RwSignal::new(String::new());
+    let command_input: NodeRef<Input> = NodeRef::new();
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
-        let value = command_element.get().expect("<command> to exist").value();
-        
+        let value = command_input.get().expect("<command> to exist").value();
+
         let new_command = parse(&value);
-        if let Some(command_stack) = state.special_event_triggered(&new_command) {
+        if let Some(command_stack) = state.write().special_event_triggered(&new_command) {
             for new_command in command_stack {
-                new_command.execute(&mut state);
+                state.update(|s| {
+                    let _ = new_command.execute(s);
+                });
             }
         } else {
-            new_command.execute(&mut state);
+            state.update(|s| {
+                let _ = new_command.execute(s);
+            });
         }
-        command.set(format!("{}\n{}\n\n---> {}\n", command.get(), state.get_log(), value));
-        command_element
+        let mut msg = String::new();
+        state.update(|s| msg = s.get_log());
+        output.set(format!("{}\n{}\n\n---> {}\n", output.get(), msg, value));
+        command_input
             .get()
             .expect("<command> to exist")
             .set_value("");
@@ -78,14 +84,16 @@ fn HomePage() -> impl IntoView {
     view! {
         <h1>"Hraefnstead - a tiny text adventure"</h1>
             <div>
-            <textarea class="scrollabletextbox" name="note" readonly prop:value=move || command.get()>{command}</textarea>
+            <textarea class="scrollabletextbox" name="note" readonly prop:value=move || output.get()>{output}</textarea>
+            { output }
             </div>
             <div class="command">
             <p>"Enter your command: "</p>
             <form on:submit=on_submit>
-                <input class="command_input" type="text" value=command node_ref=command_element />
+                <input class="command_input" type="text" value=output node_ref=command_input />
                 <input type="submit" value="Submit"/>
             </form>
+            <button on:click=move |_| { state.set(State::new()); }>"Restart game"</button>
             </div>
     }
 }

@@ -7,6 +7,7 @@ mod event;
 pub mod parser;
 mod room;
 pub mod state;
+pub mod victory;
 
 use state::State;
 
@@ -17,7 +18,7 @@ pub fn load_game(name: &str) -> State {
 
 pub fn save_game(name: &str, state: &State) {
     let state_json = serde_json::to_string(&state).expect("Failed to serialize state");
-    std::fs::write(&name, state_json).expect("Failed to write game file");
+    std::fs::write(name, state_json).expect("Failed to write game file");
 }
 
 pub const SAVE_FILE: &str = "adventure_state.json";
