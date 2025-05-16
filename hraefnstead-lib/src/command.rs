@@ -32,6 +32,7 @@ pub enum Command {
     Attack(String),
     GameOver,
     Won,
+    Help(String),
     // Denial,
     //TriggerDialog,
     // StateOfDialog(usize),
@@ -43,23 +44,24 @@ impl Command {
             Command::Quit => {
                 return Victory::Quit;
             }
-            Command::Save(name) => {
-                let file_name = if name.is_empty() {
-                    state.get_file_name().to_string()
-                } else {
-                    name.to_string()
-                };
-                state.set_file_name(&file_name);
-                super::save_game(&file_name, state);
-            }
+            Command::Save(name) => return Victory::Save(name.clone()),
+            //Save(name) => {
+            //     let file_name = if name.is_empty() {
+            //         state.get_file_name().to_string()
+            //     } else {
+            //         name.to_string()
+            //     };
+            //     state.set_file_name(&file_name);
+            //     super::save_game(&file_name, state);
             Command::Load(name) => {
-                let file_name = if name.is_empty() {
-                    state.get_file_name()
-                } else {
-                    name
-                };
-                super::load_game(file_name);
-                Command::Look.execute(state);
+                return Victory::Load(name.clone());
+                //let file_name = if name.is_empty() {
+                //     state.get_file_name()
+                //  } else {
+                //      name
+                //   };
+                //   super::load_game(file_name);
+                //  Command::Look.execute(state);
             }
             Command::Look => {
                 let room = state.get_room();
@@ -185,28 +187,26 @@ impl Command {
             }
             Command::GameOver => {
                 return Victory::GameOver;
-                // let mut cmd = Command::None;
-                // let mut msg = String::new();
-                // while cmd == Command::None {
-                //     msg = "Would you like to try again? (yes/no): ".to_string();
-                //     let mut input = String::new();
-                //     io::stdout().flush().expect("Failed to flush");
-                //     io::stdin()
-                //         .read_line(&mut input)
-                //         .expect("Failed to read line");
-                //     input = input.to_lowercase();
-                //     let mut tokens = input.split_whitespace();
-                //     let answer = tokens.next().unwrap();
-                //     cmd = match answer {
-                //         "yes" => Command::Load(state.get_file_name().to_string()),
-                //         "no" => Command::Quit,
-                //         _ => Command::None,
-                //     };
-                // }
-                // state.log(&msg);
-                // return cmd.execute(state);
             }
             Command::Won => return Victory::Won,
+            Command::Help(command) => {
+                let mut tokens = command.split_whitespace();
+                let answer = tokens.next().unwrap();
+                match answer{
+                    "look"=>println!("With look you get a brief description of your surroundings"),
+                    "save"=>println!("Saves your game for you"),
+                    "load"=>println!("Loads a prior saved game file"),
+                    "examine"=>println!("Gives you a detailed description of specified Item/Object. Can also be applied on items in your inventory"),
+                    "inventory"=>println!("Shows all items you are currently carrying with you"),
+                    "go"=>println!("With go you can navigate into any direction you specify(north/south/east/west)"),
+                    "use"=>println!("With use you can perform specific actions that require a specific item. Make sure to specify said items when using 'use'"),
+                    "attack"=>println!("Doesn't the name speak for itself? Just keep in mind messing with the wrong people WILL get you in trouble"),
+                    "craft"=>println!("With craft you consume item(s) to create new ones, that are oftentimes from much higher quality and value than there components"),
+                    "Default"=>println!("look\nquit\nsave\ngo\ndrop\ninventory\nexamine\nuse\nattack\ncraft"),
+                    _=>{}
+
+                }
+            }
 
             _ => {}
         }

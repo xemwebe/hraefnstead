@@ -23,7 +23,6 @@ pub struct State {
     events: Vec<Event>,
     //dialogs: Vec<Dialog>,
     conditions: Vec<Condition>,
-    file_name: String,
     log: String,
 }
 impl Default for State {
@@ -135,7 +134,7 @@ impl State {
             Condition::And(3, 4),
             Condition::And(5, 6),
             Condition::ObjectInInventory(4),
-            Condition::CommandIs(Command::Use("goblin".to_string())),
+            Condition::CommandIs(Command::Use("chips".to_string())),
             Condition::And(9, 8),
             Condition::And(10, 0),
             Condition::CommandIs(Command::Attack("goblin".to_string())),
@@ -220,7 +219,6 @@ impl State {
             //dialogs,
             conditions,
             log: String::new(),
-            file_name: super::SAVE_FILE.to_string(),
         }
     }
 
@@ -355,13 +353,6 @@ impl State {
         }
     }
 
-    pub fn set_file_name(&mut self, file_name: &str) {
-        self.file_name = file_name.to_string();
-    }
-
-    pub fn get_file_name(&self) -> &str {
-        &self.file_name
-    }
     pub fn de_activate_event(&mut self, event_id: &usize) {
         self.active_events.remove(event_id);
     }
@@ -401,7 +392,20 @@ impl State {
         self.log = String::new();
         log
     }
+    pub fn reset(&mut self) {
+        let reset = State::new();
+        self.inventory = reset.inventory;
+        self.loc = reset.loc;
+        self.craft_inventory = reset.craft_inventory;
+        self.rooms = reset.rooms;
+        self.entities = reset.entities;
+        self.actors = reset.actors;
+        self.events = reset.events;
+        self.conditions = reset.conditions;
+        self.log = reset.log;
+    }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
