@@ -87,6 +87,14 @@ pub fn parse(input: &str) -> Command {
                 Command::None
             }
         }
+        "help" => {
+            if let Some(thing) = tokens.next() {
+                Command::Help(thing.to_string())
+            } else {
+                Command::Help("Default".to_string())
+            }
+        }
+
         "craft" => {
             if let Some(thing) = tokens.next() {
                 thing.to_string();

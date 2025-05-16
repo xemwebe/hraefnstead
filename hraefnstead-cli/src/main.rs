@@ -1,6 +1,7 @@
 use clap::Parser;
+use hraefnstead_lib::parser::parse;
+use hraefnstead_lib::state::State;
 use hraefnstead_lib::victory::Victory;
-use hraefnstead_lib::{load_game, parser::parse, state::State, SAVE_FILE};
 use std::io::{self, Write};
 
 #[derive(Parser)]
@@ -22,16 +23,17 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
+    println!("Welcome to the dungeons of hraefnstead!\nType:'help' to briefly view possible actions.\nTyping said actions prior to 'help' will reveal more about their quality. ");
+
     let mut input = "look".to_string();
+    let mut game_file = SAVE_FILE.to_string();
 
     let mut state = if cli.test {
         State::new()
     } else {
-        let game_file = if let Some(file) = cli.game {
-            file
-        } else {
-            SAVE_FILE.to_string()
-        };
+        if let Some(file) = cli.game {
+            game_file = file;
+        }
         load_game(&game_file)
     };
     let mut victory = Victory::None;
@@ -61,7 +63,7 @@ fn main() {
                     let answer = tokens.next().unwrap();
                     match answer {
                         "yes" => {
-                            state = load_game(state.get_file_name());
+                            load_game(&game_file);
                             break;
                         }
                         "no" => return,
@@ -96,6 +98,15 @@ fn main() {
             }
             Victory::Quit => return,
             Victory::None => {}
+            Victory::Load(ref name) => {
+                load_game(name);
+            }
+            Victory::Save(ref name) => {
+                if !name.is_empty() {
+                    game_file = name.to_string();
+                }
+                save_game(&game_file, &state);
+            }
         }
         println!("{}", state.get_log());
         input = String::new();
@@ -107,4 +118,15 @@ fn main() {
         input = input.to_lowercase();
         //parse(&input);
     }
+}
+
+pub const SAVE_FILE: &str = "adventure_state.json";
+
+pub fn load_game(name: &str) -> State {
+    let state_json = std::fs::read_to_string(name).expect("Failed to read game file");
+    serde_json::from_str(&state_json).expect("Failed to deserialize state")
+}
+pub fn save_game(name: &str, state: &State) {
+    let state_json = serde_json::to_string(&state).expect("Failed to serialize state");
+    std::fs::write(name, state_json).expect("Failed to write game file");
 }

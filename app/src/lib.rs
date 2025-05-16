@@ -103,7 +103,12 @@ fn HomePage() -> impl IntoView {
                 <input class="command_input" type="text" value=output node_ref=command_input />
                 <input type="submit" value="Submit"/>
             </form>
-            <button on:click=move |_| { state.set(State::new()); }>"Restart game"</button>
+            <button on:click=move |_|  {
+                state.set(State::new());
+                output.set(String::new()); }
+            >"Restart game"</button>
+            <button on:click=move |_| {}>"Load"</button>
+            <button on:click=move |_| {}>"Save"</button>
             </div>
     }
 }
