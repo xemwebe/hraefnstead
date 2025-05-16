@@ -1,5 +1,5 @@
-use hraefnstead_lib::{parser::parse, state::State};
-use leptos::prelude::*;
+use hraefnstead_lib::{parser::parse, state::State, victory::Victory};
+use leptos::{html::Textarea, prelude::*};
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
@@ -56,36 +56,46 @@ fn HomePage() -> impl IntoView {
     // Creates a reactive value to update the button
     let output = RwSignal::new(String::new());
     let command_input: NodeRef<Input> = NodeRef::new();
+    let output_area: NodeRef<Textarea> = NodeRef::new();
+
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         let value = command_input.get().expect("<command> to exist").value();
 
         let new_command = parse(&value);
-        if let Some(command_stack) = state.write().special_event_triggered(&new_command) {
+        let mut command_result = Victory::None;
+        let mut command_stack = None;
+        state.update(|s| command_stack = s.special_event_triggered(&new_command));
+        if let Some(command_stack) = command_stack {
             for new_command in command_stack {
                 state.update(|s| {
-                    let _ = new_command.execute(s);
+                    command_result = new_command.execute(s);
                 });
             }
         } else {
             state.update(|s| {
-                let _ = new_command.execute(s);
+                command_result = new_command.execute(s);
             });
         }
-        let mut msg = String::new();
-        state.update(|s| msg = s.get_log());
-        output.set(format!("{}\n{}\n\n---> {}\n", output.get(), msg, value));
+        let mut log = String::new();
+        state.update(|s| log = s.get_log());
+        output.set(format!("{}\n---> {value}\n{log}\n", output.get()));
         command_input
             .get()
             .expect("<command> to exist")
             .set_value("");
+
+        output_area.update(|o| {
+            if let Some(o) = o {
+                o.set_scroll_top(o.scroll_height());
+            }
+        });
     };
 
     view! {
         <h1>"Hraefnstead - a tiny text adventure"</h1>
             <div>
-            <textarea class="scrollabletextbox" name="note" readonly prop:value=move || output.get()>{output}</textarea>
-            { output }
+            <textarea class="scrollabletextbox" name="note" readonly prop:value=move || output.get() ></textarea>
             </div>
             <div class="command">
             <p>"Enter your command: "</p>
