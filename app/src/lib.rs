@@ -106,23 +106,21 @@ fn HomePage() -> impl IntoView {
         state.update(|s| process_victory(s, &command_result));
         let mut log = String::new();
         state.update(|s| log = s.get_log());
-        output.set(format!("{}\n---> {value}\n{log}\n", output.get()));
+        output.set(format!("---> {value}\n{log}\n"));
         command_input
             .get()
             .expect("<command> to exist")
             .set_value("");
 
-        output_area.update(|o| {
-            if let Some(o) = o {
-                o.set_scroll_top(o.scroll_height());
-            }
-        });
+        if let Some(o) = output_area.get() {
+            o.set_scroll_top(o.scroll_height());
+        }
     };
 
     view! {
         <h1>"Hraefnstead - a tiny text adventure"</h1>
             <div>
-            <textarea class="scrollabletextbox" name="note" readonly prop:value=move || output.get() ></textarea>
+            <textarea class="scrollabletextbox" name="note" readonly prop:value=move || output.get() node_ref=output_area ></textarea>
             </div>
             <div class="command">
             <p>"Enter your command: "</p>
