@@ -32,10 +32,10 @@ pub fn FileUpload(state: RwSignal<State>) -> impl IntoView {
     };
 
     view! {
-         <div>
-             <input type="file" name="file_to_upload" id="file_to_upload" class="file-input" node_ref=file_selector />
+         <span>
              <button class="custom-button" on:click=load_file >Load File</button>
-         </div>
+             <input type="file" name="file_to_upload" id="file_to_upload" class="file-input" node_ref=file_selector />
+         </span>
     }
 }
 

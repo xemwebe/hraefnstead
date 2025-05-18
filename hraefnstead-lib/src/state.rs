@@ -197,7 +197,7 @@ impl State {
                 ),
                 Room::new(
                     "Chamber",
-                    "There is a bed in the chamber. The pillows are soft.",
+                    "There is a bed in the chamber. The pillows make a soft and inviting impression.",
                     HashSet::new(),
                     chamber_actors,
                     exits_chamber,
@@ -403,6 +403,9 @@ impl State {
         self.events = reset.events;
         self.conditions = reset.conditions;
         self.log = reset.log;
+    }
+    pub fn is_dead(&self) -> bool {
+        self.loc == super::GAME_OVER
     }
 }
 

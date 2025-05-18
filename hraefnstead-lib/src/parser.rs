@@ -1,18 +1,22 @@
 use crate::command::Command;
 use crate::direction::Direction;
+use crate::state::State;
 
-pub fn parse(input: &str) -> Command {
+pub fn parse(input: &str, state: &mut State) -> Command {
     let mut tokens = input.split_whitespace();
     let command = tokens.next().unwrap();
-
+    if state.is_dead() {
+        state.log("\nYou can't do that, you are still dead!");
+        return Command::None;
+    }
     match command {
         "look" => Command::Look,
         "quit" => {
-            println!("Goodbye!");
+            state.log("Goodbye!");
             Command::Quit
         }
         "save" => {
-            println!("Saving game...");
+            state.log("Saving game...");
             let file_name = if let Some(file_name) = tokens.next() {
                 file_name.to_string()
             } else {
@@ -21,7 +25,7 @@ pub fn parse(input: &str) -> Command {
             Command::Save(file_name)
         }
         "load" => {
-            println!("Loading game...");
+            state.log("Loading game...");
             let file_name = if let Some(file_name) = tokens.next() {
                 file_name.to_string()
             } else {
@@ -34,11 +38,11 @@ pub fn parse(input: &str) -> Command {
                 if let Some(direction) = Direction::from_str(dir) {
                     Command::Move(direction)
                 } else {
-                    println!("I don't know that direction.");
+                    state.log("I don't know that direction.");
                     Command::None
                 }
             } else {
-                println!("You need to specify a direction to go to.");
+                state.log("You need to specify a direction to go to.");
                 Command::None
             }
         }
@@ -50,7 +54,7 @@ pub fn parse(input: &str) -> Command {
             if let Some(thing) = tokens.next() {
                 Command::Take(thing.to_string())
             } else {
-                println!("You need to specify an item to take.");
+                state.log("You need to specify an item to take.");
                 Command::None
             }
         }
@@ -58,7 +62,7 @@ pub fn parse(input: &str) -> Command {
             if let Some(thing) = tokens.next() {
                 Command::Drop(thing.to_string())
             } else {
-                println!("You need to specify an item to drop.");
+                state.log("You need to specify an item to drop.");
                 Command::None
             }
         }
@@ -67,7 +71,7 @@ pub fn parse(input: &str) -> Command {
             if let Some(thing) = tokens.next() {
                 Command::Examine(thing.to_string())
             } else {
-                println!("You need to specify an item to examine.");
+                state.log("You need to specify an item to examine.");
                 Command::None
             }
         }
@@ -75,7 +79,7 @@ pub fn parse(input: &str) -> Command {
             if let Some(thing) = tokens.next() {
                 Command::Use(thing.to_string())
             } else {
-                println!("You need to specify an item to use.");
+                state.log("You need to specify an item to use.");
                 Command::None
             }
         }
@@ -83,7 +87,7 @@ pub fn parse(input: &str) -> Command {
             if let Some(thing) = tokens.next() {
                 Command::Attack(thing.to_string())
             } else {
-                println!("You need to specify an enemy to atack.");
+                state.log("You need to specify an enemy to atack.");
                 Command::None
             }
         }
@@ -104,12 +108,12 @@ pub fn parse(input: &str) -> Command {
                     Command::Craft(thing.to_string())
                 }
             } else {
-                println!("You cant craft with that");
+                state.log("You cant craft with that");
                 Command::None
             }
         }
         _ => {
-            println!("I don't understand that command.");
+            state.log("I don't understand that command.");
             Command::None
         }
     }

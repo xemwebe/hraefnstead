@@ -1,4 +1,4 @@
-use hraefnstead_lib::{parser::parse, state::State, victory::Victory};
+use hraefnstead_lib::{command::Command, parser::parse, state::State, victory::Victory, GAME_OVER};
 use leptos::{html::Textarea, prelude::*};
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -50,6 +50,25 @@ pub fn App() -> impl IntoView {
     }
 }
 
+fn process_victory(state: &mut State, victory: &Victory) {
+    match victory {
+        Victory::Won => {
+            state.log("\n!!!Congratulations You won the Game!!!");
+        }
+        Victory::GameOver => {
+            state.log("\nYou are dead.\nIf you want to try again, press the restart button or load a previously saved state.");
+            state.set_location(GAME_OVER);
+        }
+        Victory::Load(_) | Victory::Save(_) => {
+            state.log("\nPlease use the button below to save or load game states.")
+        }
+        Victory::Quit => {
+            state.log("\nIf you want to quit, just close the window.");
+        }
+        Victory::None => {}
+    }
+}
+
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
@@ -58,7 +77,7 @@ fn HomePage() -> impl IntoView {
 
     let state = RwSignal::new(State::new());
     // Creates a reactive value to update the button
-    let output = RwSignal::new(String::new());
+    let output = RwSignal::new("Welcome to the dungeons of hraefnstead!\nType:'help' to briefly view possible actions.\nTyping said actions prior to 'help' will reveal more about their quality.\n".to_string());
     let command_input: NodeRef<Input> = NodeRef::new();
     let output_area: NodeRef<Textarea> = NodeRef::new();
 
@@ -66,7 +85,10 @@ fn HomePage() -> impl IntoView {
         ev.prevent_default();
         let value = command_input.get().expect("<command> to exist").value();
 
-        let new_command = parse(&value);
+        let mut new_command = Command::None;
+        state.update(|s| {
+            new_command = parse(&value, s);
+        });
         let mut command_result = Victory::None;
         let mut command_stack = None;
         state.update(|s| command_stack = s.special_event_triggered(&new_command));
@@ -81,6 +103,7 @@ fn HomePage() -> impl IntoView {
                 command_result = new_command.execute(s);
             });
         }
+        state.update(|s| process_victory(s, &command_result));
         let mut log = String::new();
         state.update(|s| log = s.get_log());
         output.set(format!("{}\n---> {value}\n{log}\n", output.get()));
@@ -104,7 +127,7 @@ fn HomePage() -> impl IntoView {
             <div class="command">
             <p>"Enter your command: "</p>
             <form on:submit=on_submit>
-                <input class="command_input" type="text" value=output node_ref=command_input />
+                <input class="command_input" type="text" value="" node_ref=command_input />
                 <input type="submit" value="Submit"/>
             </form>
             </div>

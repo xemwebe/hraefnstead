@@ -45,23 +45,8 @@ impl Command {
                 return Victory::Quit;
             }
             Command::Save(name) => return Victory::Save(name.clone()),
-            //Save(name) => {
-            //     let file_name = if name.is_empty() {
-            //         state.get_file_name().to_string()
-            //     } else {
-            //         name.to_string()
-            //     };
-            //     state.set_file_name(&file_name);
-            //     super::save_game(&file_name, state);
             Command::Load(name) => {
                 return Victory::Load(name.clone());
-                //let file_name = if name.is_empty() {
-                //     state.get_file_name()
-                //  } else {
-                //      name
-                //   };
-                //   super::load_game(file_name);
-                //  Command::Look.execute(state);
             }
             Command::Look => {
                 let room = state.get_room();
@@ -192,20 +177,20 @@ impl Command {
             Command::Help(command) => {
                 let mut tokens = command.split_whitespace();
                 let answer = tokens.next().unwrap();
-                match answer{
-                    "look"=>println!("With look you get a brief description of your surroundings"),
-                    "save"=>println!("Saves your game for you"),
-                    "load"=>println!("Loads a prior saved game file"),
-                    "examine"=>println!("Gives you a detailed description of specified Item/Object. Can also be applied on items in your inventory"),
-                    "inventory"=>println!("Shows all items you are currently carrying with you"),
-                    "go"=>println!("With go you can navigate into any direction you specify(north/south/east/west)"),
-                    "use"=>println!("With use you can perform specific actions that require a specific item. Make sure to specify said items when using 'use'"),
-                    "attack"=>println!("Doesn't the name speak for itself? Just keep in mind messing with the wrong people WILL get you in trouble"),
-                    "craft"=>println!("With craft you consume item(s) to create new ones, that are oftentimes from much higher quality and value than there components"),
-                    "Default"=>println!("look\nquit\nsave\ngo\ndrop\ninventory\nexamine\nuse\nattack\ncraft"),
-                    _=>{}
-
-                }
+                let msg = match answer{
+                    "look"=> "With look you get a brief description of your surroundings",
+                    "save"=> "Saves your game for you",
+                    "load"=> "Loads a prior saved game file",
+                    "examine"=> "Gives you a detailed description of specified Item/Object. Can also be applied on items in your inventory",
+                    "inventory"=> "Shows all items you are currently carrying with you",
+                    "go"=> "With go you can navigate into any direction you specify(north/south/east/west)",
+                    "use"=> "With use you can perform specific actions that require a specific item. Make sure to specify said items when using 'use'",
+                    "attack"=> "Doesn't the name speak for itself? Just keep in mind messing with the wrong people WILL get you in trouble",
+                    "craft"=> "With craft you consume item(s) to create new ones, that are oftentimes from much higher quality and value than there components",
+                    "Default"=> "look\nquit\nsave\ngo\ndrop\ninventory\nexamine\nuse\nattack\ncraft",
+                    _=> ""
+                };
+                state.log(msg);
             }
 
             _ => {}
