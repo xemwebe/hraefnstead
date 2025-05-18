@@ -20,3 +20,21 @@ body {
     width: 700px;
     font-size: 140%;
 }
+
+.button {
+    background-color: blue;
+    padding: 5px;
+    border-radius: 5px;
+    transition: 1s;
+    text-decoration: none;
+    color: white;
+}
+
+.button:hover {
+    background-color: green;
+}
+
+.buttons {
+    text-align: center;
+    margin_left: 500px;
+}

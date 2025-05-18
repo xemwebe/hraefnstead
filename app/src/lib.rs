@@ -6,6 +6,10 @@ use leptos_router::{
     StaticSegment,
 };
 
+mod files;
+
+use files::{FileDownload, FileUpload};
+
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
         <!DOCTYPE html>
@@ -30,7 +34,7 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-        <Stylesheet id="leptos" href="/pkg/start-axum-workspace.css"/>
+        <Stylesheet id="leptos" href="/pkg/hraefnstead.css"/>
 
         // sets the document title
         <Title text="Hraefnstead"/>
@@ -103,12 +107,14 @@ fn HomePage() -> impl IntoView {
                 <input class="command_input" type="text" value=output node_ref=command_input />
                 <input type="submit" value="Submit"/>
             </form>
+            </div>
+            <div class="buttons">
             <button on:click=move |_|  {
                 state.set(State::new());
                 output.set(String::new()); }
             >"Restart game"</button>
-            <button on:click=move |_| {}>"Load"</button>
-            <button on:click=move |_| {}>"Save"</button>
+            <FileUpload state />
+            <FileDownload state />
             </div>
     }
 }

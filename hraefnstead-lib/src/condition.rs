@@ -1,7 +1,7 @@
 use crate::command::Command;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum Condition {
     CommandIs(Command),
     Location(usize),

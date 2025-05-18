@@ -16,6 +16,7 @@ pub async fn file_and_error_handler(
     req: Request<Body>,
 ) -> AxumResponse {
     let root = options.site_root.clone();
+    log!("site root: {root}");
     let res = get_static_file(uri.clone(), &root).await.unwrap();
 
     if res.status() == StatusCode::OK {

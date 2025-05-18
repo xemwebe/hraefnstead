@@ -2,7 +2,7 @@ use crate::direction::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Room {
     pub name: String,
     pub description: String,
